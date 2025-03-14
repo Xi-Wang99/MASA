@@ -26,13 +26,18 @@ Here we show the experiments on two of these datasets.
 
 The ```data_process/``` includes preprocessing of MV_grass and NUS_WIDE_OBJECT data.
 
-The ```MV_grass_dataset/``` includes the original dataset, which is the RGB image.
+Datasets and parameters we used can be accessed at https://drive.google.com/drive/folders/1sXWgYGi-Y52RUdQm6vB4ktGCQ4Eeut0j?usp=drive_link
+The ```MV_grass_dataset/``` includes the original RGB images of MV_grass.
+```NUSWIDEOBJ_multi-view.mat``` includes the original dataset of NUS_WIDE_OBJECT.
+```resnet18.pth``` is the pre-training ResNet-18 parameter we used.
+Before you run the model, please download all the data and files.
+Put the ```resnet18.pth``` in the ```run/``` directory.
 
 ## Quick Start
 All running files are in ```run/```.
 
 Running classification experiments on the MV_grass dataset(3 view): ```python MV_grass.py```. Just select the parameter of C and K of tasks you need.
 
-Running classification experiments on the NUS_WIDE_OBJECT(5 view): ```python NUS_5view.py```. Just select the parameter of C and K of tasks you need.
+Running classification experiments on the NUS__WIDE_OBJECT(5 view): ```python NUS_5view.py```. Just select the parameter of C and K of tasks you need.
 
 (Before running, please make sure that the data path has been changed to the path you saved.)
