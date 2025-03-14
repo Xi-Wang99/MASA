@@ -40,4 +40,4 @@ Running classification experiments on the MV_grass dataset(3 view): ```python MV
 
 Running classification experiments on the NUS__WIDE_OBJECT(5 view): ```python NUS_5view.py```. Just select the parameter of C and K of tasks you need.
 
-(Before running, please make sure that the data path has been changed to the path you saved.)
+(Before running, please make sure that all datasets and parameters have been download, and the data path has been changed to the path you saved.)
