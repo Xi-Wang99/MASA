@@ -1,0 +1,194 @@
+import torch.nn as nn
+import torch
+import scipy.linalg
+import numpy as np
+
+class CosineSimilarity(nn.Module):
+
+    def forward(self, tensor_1, tensor_2):
+        normalized_tensor_1 = tensor_1 / tensor_1.norm(dim=-1, keepdim=True)
+        normalized_tensor_2 = tensor_2 / tensor_2.norm(dim=-1, keepdim=True)
+        return (normalized_tensor_1 * normalized_tensor_2).sum(dim=-1)
+
+
+class Subspace_Projection(nn.Module):   #子空间映射模块
+    def __init__(self, num_dim=3):
+        '''
+        5-shot的意思，记得回头复盘！！
+        '''
+        super().__init__()
+        self.num_dim = num_dim
+
+    def create_subspace(self, supportset_features, class_size, sample_size):  #定义一个如何计算每类超平面和平均值的函数
+        all_hyper_planes = [] #超平面
+        means = []   #每类的平均值
+        for ii in range(class_size):   #循环处理每一个类
+            num_sample = sample_size
+            all_support_within_class_t = supportset_features[ii]#all_support_within_class_t=[f_theta(x_c)]=[f_theta(x_c,1),f_theta(x_c,2)……f_theta(x_c,k)]
+            # print(all_support_within_class_t.shape)
+            meann = torch.mean(all_support_within_class_t, dim=0)  #dim=0跨行求平均 #也就是在求mu_c
+            means.append(meann)
+            all_support_within_class_t = all_support_within_class_t - meann.unsqueeze(0).repeat(num_sample, 1)
+            #先将meann重复num_sample次，方便让[f_theta(x_c,1),f_theta(x_c,2)……f_theta(x_c,k)]一对一的减去
+            #all_support_within_class_t更新为 \hat{X_c}
+            all_support_within_class = torch.transpose(all_support_within_class_t, 0, 1)  #将矩阵转置
+            # all_support_within_class = torch.where(torch.isnan(all_support_within_class), torch.full_like(all_support_within_class, 0), all_support_within_class)
+
+            # uu, s, v = torch.svd(all_support_within_class.double(), some=False)
+            # try:
+            #     uu, s, v = torch.svd(all_support_within_class.double(), some=False)
+            # except :  # torch.svd may have convergence issues for GPU and CPU.
+            #     uu, s, v = torch.svd((all_support_within_class.double() + 1e-3 * torch.rand_like(all_support_within_class)),some=False)
+
+            try:
+                uu, s, v = torch.linalg.svd(all_support_within_class.double(), full_matrices=False)
+            except:  # torch.linalg.svd may have convergence issues for GPU and CPU.
+                uu, s, v = torch.linalg.svd(
+                    (all_support_within_class.double() + 1e-3 * torch.rand_like(all_support_within_class)),
+                    full_matrices=False)
+
+            #当 some = False 时， U[…, :, min(m, n):] 和 V[…, :, min(m, n):] 和U […，：，min(m，n):]上的梯度将被向后忽略，因为这些向量可以是子空间的任意基数。
+            #some ( bool , optional ) – 控制是计算简化分解还是完全分解，从而控制返回的 U 和 V 的形状。默认为真。
+            uu = uu.float()
+
+            all_hyper_planes.append(uu[:, :self.num_dim])
+
+        all_hyper_planes = torch.stack(all_hyper_planes, dim=0)  #将all_hyper_planes张量在0维进行拼接 [way,48,subspace]
+        # print(all_hyper_planes.shape)
+        means = torch.stack(means)  #将means拼接 [way,48]
+        # print(means.shape)
+        if len(all_hyper_planes.size()) < 3:
+            all_hyper_planes = all_hyper_planes.unsqueeze(-1)
+            #保证张量的维度一致，有的是2维张量，升到三维
+        return all_hyper_planes, means
+    #到此，我们得到了所有类的超平面和平均值
+
+
+    def projection_metric(self, target_features, hyperplanes, mu):   #定义一个query图片到该类超平面距离的度量
+        eps = 1e-12
+        batch_size = target_features.shape[0]      #这个不确定，记得回来复盘！! #矩阵0维的个数(行数)，query size = batch size
+        class_size = hyperplanes.shape[0]   #超平面0维的个数（行数），有几个超平面就有几个类
+        similarities = []  #相似度矩阵
+        discriminative_loss = 0.0
+
+        for j in range(class_size):
+            h_plane_j = hyperplanes[j].unsqueeze(0).repeat(batch_size, 1, 1)  #在第1维重复batch size次 #[6,1024.subspace]
+            # print(h_plane_j.shape)
+            target_features_expanded = (target_features - mu[j].expand_as(target_features)).unsqueeze(-1)   #也就是f_theta(q)-mu_c
+            # print(target_features_expanded.shape)  #[batch,48,1]
+            # print(target_features.shape)
+            # print(mu[j].expand_as(target_features).shape)
+            # print(target_features_expanded.type())
+            # print(h_plane_j.shape)
+            projected_query_j = torch.bmm(h_plane_j, torch.bmm(torch.transpose(h_plane_j, 1, 2), target_features_expanded))
+            # transpose(:,1,2)是将第二维和第三维转置，如[3,2,5]-变成-[3,5,2]
+            projected_query_j = torch.squeeze(projected_query_j) + mu[j].unsqueeze(0).repeat(batch_size, 1)
+            # print(projected_query_j.shape)
+            projected_query_dist_inter = target_features - projected_query_j
+            # print(target_features.shape)
+            # print(projected_query_j.shape)
+            # print(projected_query_dist_inter.shape)
+
+            # Training per epoch is slower but less epochs in total
+            query_loss = -torch.sqrt(
+                torch.sum(projected_query_dist_inter * projected_query_dist_inter, dim=-1) + eps)  # norm ||.||  #也就是d_c(q)
+            # print(query_loss.shape)
+
+
+            # Training per epoch is faster but more epochs in total
+            # query_loss = -torch.sum(projected_query_dist_inter * projected_query_dist_inter, dim=-1) # Squared norm ||.||^2
+
+            similarities.append(query_loss)
+
+
+            #接下来计算discriminative_loss，让P_j和P_k尽量远离
+            for k in range(class_size):
+                if j != k:
+                    temp_loss = torch.mm(torch.transpose(hyperplanes[j], 0, 1), hyperplanes[k])
+                    # discriminative subspaces (Conv4 only, ResNet12 is computationally expensive)
+                    discriminative_loss = discriminative_loss + torch.sum(temp_loss * temp_loss)
+
+        similarities = torch.stack(similarities, dim=1)
+        # print(similarities.shape)
+
+        return similarities, discriminative_loss
+        #到此得到相似度矩阵(或者是近似分类)和超平面距离最大化损失
+
+
+
+
+    def logits(self, query, support):   #定义一个query图片到该类超平面距离的度量
+        eps = 1e-12
+        batch_size = query.shape[0]      #这个不确定，记得回来复盘！! #矩阵0维的个数(行数)，有几个query就是多大的batch size
+        class_size = support.shape[0]   #超平面0维的个数（行数），有几个超平面就有几个类
+        rank = support.shape[1]
+        # print(rank)
+
+
+        if rank == 1:
+            similarities = torch.zeros(15, 3)
+            def EuclideanDistances(a, b):
+                sq_a = a ** 2
+                sum_sq_a = torch.sum(sq_a, dim=1).unsqueeze(1)  # m->[m, 1]
+                sq_b = b ** 2
+                sum_sq_b = torch.sum(sq_b, dim=1).unsqueeze(0)  # n->[1, n]
+                bt = b.t()
+                return torch.sqrt(sum_sq_a + sum_sq_b - 2 * a.mm(bt))
+
+            for i in range(class_size):
+                for j in range(batch_size):
+                    similarities[j,i] = EuclideanDistances(query[j], support[i])
+            # print(similarities)
+        else:
+            similarities = []  # 相似度矩阵
+            for j in range(class_size):
+                h_plane_j = support[j].unsqueeze(0).repeat(batch_size, 1, 1) .transpose(1, 2)  # 在第1维重复batch size次 #[6,1024.1]
+                # print(h_plane_j.shape)  # [15,512,4]
+                projected_query_j = torch.bmm(h_plane_j, torch.bmm(h_plane_j.transpose(1, 2), query.transpose(1, 2)))
+                # print(projected_query_j.shape)  # [15,512,1]
+                # print(torch.bmm(h_plane_j, query_expanded))
+                projected_query_j = torch.squeeze(projected_query_j)
+                # print(projected_query_j.shape)  # [15,512]
+                projected_query_dist_inter = query.squeeze() - projected_query_j
+                # print(projected_query_dist_inter.shape)
+                # print(projected_query_j)
+
+                # Training per epoch is slower but less epochs in total
+                query_loss = -torch.sqrt(
+                    torch.sum(projected_query_dist_inter * projected_query_dist_inter, dim=1) + eps)  # norm ||.||  #也就是d_c(q)
+                # print(query_loss.shape)
+                # Training per epoch is faster but more epochs in total
+                # query_loss = -torch.sum(projected_query_dist_inter * projected_query_dist_inter, dim=-1) # Squared norm ||.||^2
+                similarities.append(query_loss)
+
+            similarities = torch.stack(similarities, dim=1).cuda()
+            # print(similarities.shape)
+
+            # pdist = nn.PairwiseDistance(p=2)
+            # for i in range(class_size):
+            #     for j in range(batch_size):
+            #         similarities[j,i] = pdist(support[i],query[j])
+            #         j = j+1
+            #     i = i+1
+
+
+
+
+        return similarities
+
+
+
+
+
+
+
+
+
+
+#需要再注意一下similarities怎么用
+
+#有关p(c|q)的loss在train的时候再加，dsn中用的loss = F.cross_entropy(logits, label) + args.lamb*discriminative_loss
+
+#我们需要再定义新的loss函数，有关multiview的loss，到时候train的时候一起加
+
+
