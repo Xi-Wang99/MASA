@@ -19,7 +19,8 @@ All results in the paper are from running on NVIDIA RTX3080Ti GPU.
 
 If you are using Anaconda, an identical environment can also be created by using the following command:
 ```conda env create -f environment.yml```
-![Example Image](MV_grass.png)
+
+The complex background multi-view image mentioned in our text is as follows: <img src="MV_grass.png" alt="Example Image" style="max-width:75%;">
 
 ## Datasets
 The 4 datasets we used: MV_grass, MV_paper, NUS_WIDE_OBJECT, Caltech-20.
