@@ -22,7 +22,7 @@ If you are using Anaconda, an identical environment can also be created by using
 
 The complex background multi-view image mentioned in our work is as follows: 
 
-<img src="MV_grass.png" alt="Example Image" width="600">
+<img src="MV_grass.png" alt="Example Image" width="700">
 
 ## Datasets
 The 4 datasets we used: MV_grass, MV_paper, NUS_WIDE_OBJECT, Caltech-20.
