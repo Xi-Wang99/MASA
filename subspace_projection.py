@@ -11,11 +11,14 @@ class CosineSimilarity(nn.Module):
         return (normalized_tensor_1 * normalized_tensor_2).sum(dim=-1)
 
 
-class Subspace_Projection(nn.Module):   #子空间映射模块
+class Subspace_Projection(nn.Module):
+    """
+    Subspace mapping module.
+    References:
+        The create_subspace function and the projection_metric function codes is modified based on the DSN[1] functions.
+        [1]Simon, Christian, et al. "Adaptive subspaces for few-shot learning." Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020.
+    """
     def __init__(self, num_dim=3):
-        '''
-        5-shot的意思，记得回头复盘！！
-        '''
         super().__init__()
         self.num_dim = num_dim
 
@@ -25,20 +28,13 @@ class Subspace_Projection(nn.Module):   #子空间映射模块
         for ii in range(class_size):   #循环处理每一个类
             num_sample = sample_size
             all_support_within_class_t = supportset_features[ii]#all_support_within_class_t=[f_theta(x_c)]=[f_theta(x_c,1),f_theta(x_c,2)……f_theta(x_c,k)]
-            # print(all_support_within_class_t.shape)
-            meann = torch.mean(all_support_within_class_t, dim=0)  #dim=0跨行求平均 #也就是在求mu_c
+
+            meann = torch.mean(all_support_within_class_t, dim=0)
             means.append(meann)
             all_support_within_class_t = all_support_within_class_t - meann.unsqueeze(0).repeat(num_sample, 1)
-            #先将meann重复num_sample次，方便让[f_theta(x_c,1),f_theta(x_c,2)……f_theta(x_c,k)]一对一的减去
-            #all_support_within_class_t更新为 \hat{X_c}
-            all_support_within_class = torch.transpose(all_support_within_class_t, 0, 1)  #将矩阵转置
-            # all_support_within_class = torch.where(torch.isnan(all_support_within_class), torch.full_like(all_support_within_class, 0), all_support_within_class)
 
-            # uu, s, v = torch.svd(all_support_within_class.double(), some=False)
-            # try:
-            #     uu, s, v = torch.svd(all_support_within_class.double(), some=False)
-            # except :  # torch.svd may have convergence issues for GPU and CPU.
-            #     uu, s, v = torch.svd((all_support_within_class.double() + 1e-3 * torch.rand_like(all_support_within_class)),some=False)
+            all_support_within_class = torch.transpose(all_support_within_class_t, 0, 1)
+            # all_support_within_class = torch.where(torch.isnan(all_support_within_class), torch.full_like(all_support_within_class, 0), all_support_within_class)
 
             try:
                 uu, s, v = torch.linalg.svd(all_support_within_class.double(), full_matrices=False)
@@ -47,21 +43,17 @@ class Subspace_Projection(nn.Module):   #子空间映射模块
                     (all_support_within_class.double() + 1e-3 * torch.rand_like(all_support_within_class)),
                     full_matrices=False)
 
-            #当 some = False 时， U[…, :, min(m, n):] 和 V[…, :, min(m, n):] 和U […，：，min(m，n):]上的梯度将被向后忽略，因为这些向量可以是子空间的任意基数。
-            #some ( bool , optional ) – 控制是计算简化分解还是完全分解，从而控制返回的 U 和 V 的形状。默认为真。
             uu = uu.float()
 
             all_hyper_planes.append(uu[:, :self.num_dim])
 
-        all_hyper_planes = torch.stack(all_hyper_planes, dim=0)  #将all_hyper_planes张量在0维进行拼接 [way,48,subspace]
+        all_hyper_planes = torch.stack(all_hyper_planes, dim=0)  #Splice the all_hyper_planes tensor in dimension 0  [way,48,subspace]
         # print(all_hyper_planes.shape)
-        means = torch.stack(means)  #将means拼接 [way,48]
-        # print(means.shape)
+        means = torch.stack(means)  #Splicing the means [way,48]
         if len(all_hyper_planes.size()) < 3:
             all_hyper_planes = all_hyper_planes.unsqueeze(-1)
-            #保证张量的维度一致，有的是2维张量，升到三维
         return all_hyper_planes, means
-    #到此，我们得到了所有类的超平面和平均值
+
 
 
     def projection_metric(self, target_features, hyperplanes, mu):   #定义一个query图片到该类超平面距离的度量
