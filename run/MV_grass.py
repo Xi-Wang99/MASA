@@ -99,6 +99,11 @@ def normalize_tensor(tensor):
 
 
 if __name__ == '__main__':
+    """
+    References:
+        The code framework for training and testing references the DSN[1] code.
+        [1]Simon, Christian, et al. "Adaptive subspaces for few-shot learning." Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--max-epoch', type=int, default=200)
     parser.add_argument('--save-epoch', type=int, default=10)
