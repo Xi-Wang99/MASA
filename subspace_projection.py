@@ -23,9 +23,9 @@ class Subspace_Projection(nn.Module):
         self.num_dim = num_dim
 
     def create_subspace(self, supportset_features, class_size, sample_size):  #定义一个如何计算每类超平面和平均值的函数
-        all_hyper_planes = [] #超平面
-        means = []   #每类的平均值
-        for ii in range(class_size):   #循环处理每一个类
+        all_hyper_planes = []
+        means = []
+        for ii in range(class_size):
             num_sample = sample_size
             all_support_within_class_t = supportset_features[ii]#all_support_within_class_t=[f_theta(x_c)]=[f_theta(x_c,1),f_theta(x_c,2)……f_theta(x_c,k)]
 
@@ -93,74 +93,4 @@ class Subspace_Projection(nn.Module):
         # print(similarities.shape)
 
         return similarities, discriminative_loss
-
-
-
-
-
-    # def logits(self, query, support):   #定义一个query图片到该类超平面距离的度量
-    #     eps = 1e-12
-    #     batch_size = query.shape[0]      #这个不确定，记得回来复盘！! #矩阵0维的个数(行数)，有几个query就是多大的batch size
-    #     class_size = support.shape[0]   #超平面0维的个数（行数），有几个超平面就有几个类
-    #     rank = support.shape[1]
-    #     # print(rank)
-    #
-    #
-    #     if rank == 1:
-    #         similarities = torch.zeros(15, 3)
-    #         def EuclideanDistances(a, b):
-    #             sq_a = a ** 2
-    #             sum_sq_a = torch.sum(sq_a, dim=1).unsqueeze(1)  # m->[m, 1]
-    #             sq_b = b ** 2
-    #             sum_sq_b = torch.sum(sq_b, dim=1).unsqueeze(0)  # n->[1, n]
-    #             bt = b.t()
-    #             return torch.sqrt(sum_sq_a + sum_sq_b - 2 * a.mm(bt))
-    #
-    #         for i in range(class_size):
-    #             for j in range(batch_size):
-    #                 similarities[j,i] = EuclideanDistances(query[j], support[i])
-    #         # print(similarities)
-    #     else:
-    #         similarities = []  # 相似度矩阵
-    #         for j in range(class_size):
-    #             h_plane_j = support[j].unsqueeze(0).repeat(batch_size, 1, 1) .transpose(1, 2)  # 在第1维重复batch size次 #[6,1024.1]
-    #             # print(h_plane_j.shape)  # [15,512,4]
-    #             projected_query_j = torch.bmm(h_plane_j, torch.bmm(h_plane_j.transpose(1, 2), query.transpose(1, 2)))
-    #             # print(projected_query_j.shape)  # [15,512,1]
-    #             # print(torch.bmm(h_plane_j, query_expanded))
-    #             projected_query_j = torch.squeeze(projected_query_j)
-    #             # print(projected_query_j.shape)  # [15,512]
-    #             projected_query_dist_inter = query.squeeze() - projected_query_j
-    #             # print(projected_query_dist_inter.shape)
-    #             # print(projected_query_j)
-    #
-    #             # Training per epoch is slower but less epochs in total
-    #             query_loss = -torch.sqrt(
-    #                 torch.sum(projected_query_dist_inter * projected_query_dist_inter, dim=1) + eps)  # norm ||.||  #也就是d_c(q)
-    #             # print(query_loss.shape)
-    #             # Training per epoch is faster but more epochs in total
-    #             # query_loss = -torch.sum(projected_query_dist_inter * projected_query_dist_inter, dim=-1) # Squared norm ||.||^2
-    #             similarities.append(query_loss)
-    #
-    #         similarities = torch.stack(similarities, dim=1).cuda()
-    #         # print(similarities.shape)
-    #
-    #         # pdist = nn.PairwiseDistance(p=2)
-    #         # for i in range(class_size):
-    #         #     for j in range(batch_size):
-    #         #         similarities[j,i] = pdist(support[i],query[j])
-    #         #         j = j+1
-    #         #     i = i+1
-    #
-    #     return similarities
-
-
-
-
-
-
-
-
-
-
 
