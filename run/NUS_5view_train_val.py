@@ -101,7 +101,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', default='0')
     parser.add_argument('--lamb', type=float, default=0.03)
     parser.add_argument('--eta', type=float, default=0.005)
-    parser.add_argument('--seed', type=int, default=1111, help='random seed')
+    parser.add_argument('--seed', type=int, default=1111, help='random seed')  #2222, 3333
     parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--adaptive', action='store_true', default=True)
 

@@ -159,13 +159,6 @@ if __name__ == '__main__':
         shot_num = args.shot
 
     print("Loading best model from validation...")
-    # model_view1.load_state_dict(torch.load(os.path.join(save_dir, '{}way-{}shot'.format(args.test_way, args.shot), 'epoch=170', 'model_view1_best.pth')))
-    # model_view2.load_state_dict(torch.load(os.path.join(save_dir, '{}way-{}shot'.format(args.test_way, args.shot), 'epoch=90', 'model_view2_best.pth')))
-    # model_view3.load_state_dict(torch.load(os.path.join(save_dir, '{}way-{}shot'.format(args.test_way, args.shot), 'epoch=135', 'model_view3_best.pth')))
-    # att1.load_state_dict(torch.load(os.path.join(save_dir, '{}way-{}shot'.format(args.test_way, args.shot), 'epoch=135', 'att1_best.pth')))
-    # att2.load_state_dict(torch.load(os.path.join(save_dir, '{}way-{}shot'.format(args.test_way, args.shot), 'epoch=135', 'att2_best.pth')))
-    # att3.load_state_dict(torch.load(os.path.join(save_dir, '{}way-{}shot'.format(args.test_way, args.shot), 'epoch=135', 'att3_best.pth')))
-
     model_view1.load_state_dict(torch.load(
         os.path.join(save_dir, '{}way-{}shot'.format(args.test_way, args.shot), 'view1model_best.pth')))
     model_view2.load_state_dict(torch.load(
@@ -310,13 +303,6 @@ if __name__ == '__main__':
         if ta_view5.item() > trlog['view5_max_acc']:
             trlog['view5_max_acc'] = ta_view5.item()
 
-        # if epoch % 10 == 0:
-        #     print('view1_epoch {}, test, maxacc={:.4f}'.format(epoch,  trlog['view1_max_acc']))
-        #     print('view2_epoch {}, test, maxacc={:.4f}'.format(epoch, trlog['view2_max_acc']))
-        #     print('view3_epoch {}, test, maxacc={:.4f}'.format(epoch, trlog['view3_max_acc']))
-        #     print('view4_epoch {}, test, maxacc={:.4f}'.format(epoch, trlog['view4_max_acc']))
-        #     print('view5_epoch {}, test, maxacc={:.4f}'.format(epoch, trlog['view5_max_acc']))
-        #     print('epoch {}, test, maxacc={:.4f}'.format(epoch, trlog['max_acc']))
 
 
         trlog['test_acc'].append(ta.item())
@@ -332,37 +318,31 @@ if __name__ == '__main__':
         if epoch % 10 == 0:
             # print("\n=== Final Evaluation Summary ===")
             print("Epoch={}".format(epoch))
-            print("view1: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['view1_max_acc'],
+            print("view1: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['view1_acc_list']),
                 statistics.stdev(trlog['view1_acc_list'])
             ))
 
-            print("view2: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['view2_max_acc'],
+            print("view2: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['view2_acc_list']),
                 statistics.stdev(trlog['view2_acc_list'])
             ))
 
-            print("view3: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['view3_max_acc'],
+            print("view3: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['view3_acc_list']),
                 statistics.stdev(trlog['view3_acc_list'])
             ))
-            print("view4: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['view4_max_acc'],
+            print("view4: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['view4_acc_list']),
                 statistics.stdev(trlog['view4_acc_list'])
             ))
 
-            print("view5: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['view5_max_acc'],
+            print("view5: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['view5_acc_list']),
                 statistics.stdev(trlog['view5_acc_list'])
             ))
 
-            print("Fusion: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['max_acc'],
+            print("Fusion: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['fusion_acc_list']),
                 statistics.stdev(trlog['fusion_acc_list'])
             ))

@@ -178,12 +178,12 @@ if __name__ == '__main__':
         os.path.join(save_dir, agg_name, '{}way-{}shot wo'.format(args.test_way, args.shot), 'view2model_best.pth')))
     model_view3.load_state_dict(torch.load(
         os.path.join(save_dir, agg_name, '{}way-{}shot wo'.format(args.test_way, args.shot), 'view3model_best.pth')))
-    # att1.load_state_dict(torch.load(
-    #     os.path.join(save_dir, agg_name, '{}way-{}shot'.format(args.test_way, args.shot), 'att1_best.pth')))
-    # att2.load_state_dict(torch.load(
-    #     os.path.join(save_dir, agg_name, '{}way-{}shot'.format(args.test_way, args.shot), 'att2_best.pth')))
-    # att3.load_state_dict(torch.load(
-    #     os.path.join(save_dir, agg_name, '{}way-{}shot'.format(args.test_way, args.shot), 'att3_best.pth')))
+    att1.load_state_dict(torch.load(
+        os.path.join(save_dir, agg_name, '{}way-{}shot'.format(args.test_way, args.shot), 'att1_best.pth')))
+    att2.load_state_dict(torch.load(
+        os.path.join(save_dir, agg_name, '{}way-{}shot'.format(args.test_way, args.shot), 'att2_best.pth')))
+    att3.load_state_dict(torch.load(
+        os.path.join(save_dir, agg_name, '{}way-{}shot'.format(args.test_way, args.shot), 'att3_best.pth')))
 
     trlog = {}
     trlog['args'] = vars(args)
@@ -258,11 +258,6 @@ if __name__ == '__main__':
             ta_view3.add(acc_view3)
             ta.add(acc)
 
-        # print('view1_epoch {}, test, loss={:.4f} acc={:.4f} maxacc={:.4f}'.format(epoch,tl_view1.item(), ta_view1.item(), trlog['view1_max_acc']))
-        # print('view2_epoch {}, test, loss={:.4f} acc={:.4f} maxacc={:.4f}'.format(epoch, tl_view2.item(),  ta_view2.item(),  trlog['view2_max_acc']))
-        # print('view3_epoch {}, test, loss={:.4f} acc={:.4f} maxacc={:.4f}'.format(epoch,  tl_view3.item(),   ta_view3 .item(),  trlog['view3_max_acc']))
-        # print('epoch {}, test, loss={:.4f} acc={:.4f} maxacc={:.4f}'.format(epoch, tl.item(), ta.item(), trlog['max_acc']))
-
 
         if args.low:
             agg_name = 'low'
@@ -282,25 +277,21 @@ if __name__ == '__main__':
         if epoch % 10 == 0:
             # print("\n=== Final Evaluation Summary ===")
             print("Epoch={}".format(epoch))
-            print("view1: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['view1_max_acc'],
+            print("view1: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['view1_acc_list']),
                 statistics.stdev(trlog['view1_acc_list'])
             ))
 
-            print("view2: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['view2_max_acc'],
+            print("view2:  mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['view2_acc_list']),
                 statistics.stdev(trlog['view2_acc_list'])
             ))
 
-            print("view3: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['view3_max_acc'],
+            print("view3: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['view3_acc_list']),
                 statistics.stdev(trlog['view3_acc_list'])
             ))
-            print("MASA: max = {:.4f}, mean = {:.4f}, std = {:.4f}".format(
-                trlog['max_acc'],
+            print("MASA: mean = {:.4f}, std = {:.4f}".format(
                 statistics.mean(trlog['fusion_acc_list']),
                 statistics.stdev(trlog['fusion_acc_list'])
             ))
