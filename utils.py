@@ -17,6 +17,9 @@ from scipy.stats import t
 import numpy as np
 from collections import OrderedDict
 
+
+
+
 class GaussianNoise(nn.Module):
 
     def __init__(self, batch_size, input_shape=(3, 84, 84), std=0.05):
@@ -324,6 +327,44 @@ def contrast_loss(hyperplanes_1, train_way, query, subspace_dim, T, query_view1)
 
     return  contrast_loss
 
+
+
+
+def pairwise_trace(P,Q,Z,v):
+    assert isinstance(P, torch.Tensor)
+    assert isinstance(Q, torch.Tensor)
+    assert isinstance(Z, torch.Tensor)
+    way = P.shape[0]
+    m=3
+    result = torch.zeros((m, way)).cuda()
+    for i in range(way):
+        PP = torch.mm(P[i].t(), P[i])
+        QQ = torch.mm(Q[i].t(), Q[i])
+        ZZ = torch.mm(Z[i].t(), Z[i])
+        trace_PQ = torch.trace(torch.mm(PP, QQ))
+        trace_PZ = torch.trace(torch.mm(PP, ZZ))
+        trace_QZ = torch.trace(torch.mm(QQ, ZZ))
+        result[0, i] = trace_PQ
+        result[1, i] = trace_PZ
+        result[2, i] = trace_QZ
+    return result.T
+
+
+def hadamard_sum(A, B):
+    C = A * B
+    result = torch.sum(C)
+    return result
+
+
+def normalize_tensor(tensor):
+    min_val = torch.min(tensor)
+    max_val = torch.max(tensor)
+
+    if max_val == min_val:
+        return torch.zeros(tensor.shape)
+
+    normalized_tensor = (tensor - min_val) / (max_val - min_val)
+    return normalized_tensor
 
 
 
