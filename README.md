@@ -28,7 +28,7 @@ The complex background multi-view image mentioned in our work is as follows:
 The 4 datasets we used: MV_grass, MV_paper, NUS_WIDE_OBJECT, Caltech-20.
 Here we show the experiments on two of these datasets.
 
-The ```data_process/``` includes preprocessing of MV_grass, Calteh-20 and NUS_WIDE_OBJECT data.
+The ```data_process/``` includes preprocessing of MV_grass, Caltech-20 and NUS_WIDE_OBJECT data.
 
 Datasets and parameters we used can be accessed at https://drive.google.com/drive/folders/1sXWgYGi-Y52RUdQm6vB4ktGCQ4Eeut0j?usp=drive_link
 The ```MV_grass_dataset/``` includes the original RGB images of MV_grass. Similarly, ```NUSWIDEOBJ_multi-view.mat``` includes the original dataset of NUS_WIDE_OBJECT.
