@@ -40,8 +40,10 @@ Put the ```resnet18.pth``` in the ```run/``` directory.
 ## Quick Start
 All running files are in ```run/```.
 
-Running classification experiments on the MV_grass dataset(3 view): ```python MV_grass.py```. Just select the parameter of C and K of tasks you need.
+Running classification experiments on the MV_grass dataset(3 view): First, run ```python MVgrass_train_val.py``` to save best model. Next,run ```python MVgrass_test.py``` to test. Just select the parameter of C and K of tasks you need.
 
-Running classification experiments on the NUS__WIDE_OBJECT(5 view): ```python NUS_5view.py```. Just select the parameter of C and K of tasks you need.
+Running classification experiments on the NUS__WIDE_OBJECT(5 view): First, run ```python NUS_5view_train_val.py``` to save best model. Next,run ```python NUS_5view_test.py``` to test.  Just select the parameter of C and K of tasks you need.
+
+Caltech-20 runs similar, run ```python caltech_train_val.py``` and ```python caltech_test.py```.
 
 (Before running, please make sure that all datasets and parameters have been download, and the data path has been changed to the path you saved.)
